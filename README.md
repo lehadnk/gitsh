@@ -27,7 +27,7 @@ alias gitsh="~/gitsh.sh"
 This way you could call it from terminal much easier way.
 
 # parameters
-**-c** Makes a gitflow hotfix from a changes in this branch<br />
+**-c** Makes a gitflow hotfix from a changes in a current branch<br />
 **-u** Updates all branches listed in the config of this script<br />
 **-p** Pushes commit and tag data to repo after making a hotfix<br />
 **-j** Sets a project to work with. Current directory will be used by default<br />
