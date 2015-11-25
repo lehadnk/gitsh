@@ -28,6 +28,18 @@ This way you could call it from terminal in a much easier way.
 
 # parameters
 **-c** Makes a gitflow hotfix from changes in a current branch<br />
-**-u** Updates all branches listed in the config of this script<br />
+**-u** Updates all branches listed in the config of this script or in selected project group (see -g)<br />
 **-p** Pushes commit and tag data to repo after making a hotfix<br />
 **-j** Sets a project to work with. Current directory will be used by default<br />
+**-g** Sets a project group to work with
+
+# project groups
+You may also specify the project groups to work with in the groups section of the config:
+```
+groups=(
+	[mygroup]='project_name project_lib another_library'
+)
+```
+This way you could easily handle things like making a hotfix including changes in both project and it's library in just a single command:<br>
+**gitsh -cpg mygroup** Will check projects "project_name", "project_lib" and "another_library" for changes, initiating a process of making a hotfix for ones you made changes in (aka *cd path/to/project/ && git stash && git tag && git flow hotfix start new_tag && git stash pop && git add . && git flow hotfix finish new_tag && git push && git push --tags && cd path/to/lib && git stash && git tag && git flow hotfix start new_tag && git stash pop && git add . && git flow hotOHMYGODPLEASESTOP*)
+**gitsh -ug mygroup** Will update every project the group.
