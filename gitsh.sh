@@ -1,25 +1,35 @@
  #!/bin/bash
 
 declare -A paths
+declare -A groups
 
-#Config
+#======================
+# Config starts
+#======================
 directory='/home/lehadnk/'
 paths=(
 	[myproj]='myproject/source/' 
 	[myproj_lib]='myproject/source/vendors/company/mylib/' 
 	[awsmprj]='myawesomeproject/' 
 )
+groups=(
+	[mygroup]='myproj myproj_lib'
+)
+#======================
+# Config ends
+#======================
 
 commitFunction() {
 	changes=$(git status -s)
 
 	if [[ -z $changes ]]
 		then echo "No changes made in this branch!"
-		exit
+		return
 	fi
 
 	clear
 	echo "Good day commander!"
+	echo "Path $1..."
 	echo "Fetching tags..."
 	git fetch --tags
 	echo "Last known tag is:"
@@ -37,66 +47,75 @@ commitFunction() {
 	if [[ -n $modified ]]
 		then
 			echo "Stashing changes..."
-			git stash
+			#git stash
 	fi
 
 	echo "Updating branches..."
-	git pull --all
+	#git pull --all
 
 	echo "Making a hotfix branch..."
-	git flow hotfix start $tag
+	#git flow hotfix start $tag
 	echo "Staging..."
 	if [[ -n $modified ]]
 		then
 			echo "Stashing changes..."
-			git stash pop
+			#git stash pop
 	fi
-	git add .
+	#git add .
 
 	echo "Making commit..."
-	git commit -m "$commit"
-	git flow hotfix finish -m "$tagmsg" $tag
+	#git commit -m "$commit"
+	#git flow hotfix finish -m "$tagmsg" $tag
 
 	if $push ;
 		then echo "Pushing changes to server..."
-		git push
-		git push --tags
+		#git push
+		#git push --tags
 	fi
 }
 
 pullFunction() {
-	for item in ${paths[*]}
-	do
-		path="$directory$item"
-		cd $path
-		echo "Path $path..."
+	path=$1
 
-		modified=$(git ls-files -m)
+	echo "Path $path..."
 
-		if [[ -n $modified ]]
-			then
-				echo "Some files is modified, stashing changes..."
-				git stash
-		fi
+	modified=$(git ls-files -m)
 
-		git pull --all
+	if [[ -n $modified ]]
+		then
+			echo "Some files is modified, stashing changes..."
+			git stash
+	fi
 
-		if [[ -n $modified ]]
-			then
-				echo "Popping the stashed changes out..."
-				git stash pop
-		fi		
-	done
+	git pull --all
+
+	if [[ -n $modified ]]
+		then
+			echo "Popping the stashed changes out..."
+			git stash pop
+	fi
 }
 
 helpFunction() {
-	echo "Git Shell r3 by lehadnk"
+	echo "Git bash tool r4 by lehadnk"
 	echo ""
 	echo "Available arguments:"
 	echo "-c Makes a gitflow hotfix from a changes in this branch"
-	echo "-u Updates all branches listed in the config of this script"
+	echo "-u Updates all branches listed in the config of this script or in selected project group (see -g)"
 	echo "-p Pushes commit and tag data to repo after making a hotfix"
 	echo "-j Sets a project to work with. Current directory will be used by default"
+	echo "-g Sets a project group to work with"
+}
+
+addToQueue() {
+	project="$1";
+
+	if [[ -z "${paths[${project}]}" ]]
+		then echo "Unknown project: $project!"
+		exit
+	fi
+
+	queue+=($directory${paths[$project]})
 }
 
 setProject() {
@@ -108,7 +127,43 @@ setProject() {
 	fi
 
 	echo "Opening project $project..."
-	cd $directory${paths[$project]}
+	addToQueue "$project";
+}
+
+setGroup() {
+	group="$1"
+
+	if [[ -z "${groups[${group}]}" ]]
+		then echo "Unknown group: $group!"
+		exit
+	fi
+
+	echo "Opening project group $group..."
+
+	group=("${groups[${group}]}")
+	for g in $group; do
+		addToQueue "$g";
+	done
+}
+
+addEveryDir() {
+	for p in ${paths[*]}; do
+			queue+=($directory$p)
+	done
+}
+
+prepareQueue() {
+	if [[ -z "$queue" ]]
+		then
+			case "$mode" in
+				pull)
+					addEveryDir;
+					;;
+				*)
+					queue=('.')
+					;;
+			esac
+	fi
 }
 
 mainFunction() {
@@ -118,8 +173,9 @@ mainFunction() {
 	# Default values 
 	push=false
 	mode=help
+	queue=()
 
-	while getopts "pcuj:" opt; do
+	while getopts "pcuj:g:" opt; do
 		case "$opt" in
 			p)
 				push=true
@@ -132,22 +188,30 @@ mainFunction() {
 				;;
 			j)
 				setProject "$OPTARG";
+				;;
+			g)
+				setGroup "$OPTARG";
+				;;
 		esac
 	done
 
-	case "$mode" in
-		commit)
-			commitFunction;
-			;;
-		pull)
-			pullFunction;
-			;;
-		*)
-			helpFunction;
-			;;
-	esac
+	prepareQueue;
+
+	for p in ${queue[*]}; do
+		cd $p
+		case "$mode" in
+			commit)
+				commitFunction "$p";
+				;;
+			pull)
+				pullFunction "$p";
+				;;
+			*)
+				helpFunction;
+				exit
+				;;
+		esac
+	done
 }
-
-
 
 mainFunction "$@";
