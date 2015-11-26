@@ -2,6 +2,11 @@
 
 declare -A paths
 declare -A groups
+declare -A branches
+
+GREEN='\033[0;32m'
+PURPLE='\033[0;35m'
+NC='\033[0m' # No Color
 
 #======================
 # Config starts
@@ -14,6 +19,10 @@ paths=(
 )
 groups=(
 	[mygroup]='myproj myproj_lib'
+)
+branches=(
+	[develop]='develop'
+	[master]='master'
 )
 #======================
 # Config ends
@@ -41,63 +50,70 @@ commitFunction() {
 	if [[ -z $tagmsg ]] 
 		then tagmsg="$commit"
 	fi
+	tagmsg=`echo $tagmsg |sed "s/'//g"` #As single-quotes is not supported by git-flow
 
-	modified=$(git ls-files -m)
+	local modified=$(git ls-files -m)
 
 	if [[ -n $modified ]]
 		then
 			echo "Stashing changes..."
-			#git stash
+			git stash > /dev/null
 	fi
 
 	echo "Updating branches..."
-	#git pull --all
+	pullFunction "$1";
 
 	echo "Making a hotfix branch..."
-	#git flow hotfix start $tag
+	git flow hotfix start $tag
 	echo "Staging..."
 	if [[ -n $modified ]]
 		then
-			echo "Stashing changes..."
-			#git stash pop
+			echo "Popping out stashed changes..."
+			git stash pop > /dev/null
 	fi
-	#git add .
+	git add .
 
 	echo "Making commit..."
-	#git commit -m "$commit"
-	#git flow hotfix finish -m "$tagmsg" $tag
+	git commit -m "$commit"
+	echo "git flow hotfix finish -m "$tagmsg" $tag"
+	export GIT_MERGE_AUTOEDIT=no
+	git flow hotfix finish -m "$tagmsg" $tag
+	unset GIT_MERGE_AUTOEDIT
 
 	if $push ;
 		then echo "Pushing changes to server..."
-		#git push
-		#git push --tags
+		git push
+		git push --tags
 	fi
 }
 
 pullFunction() {
 	path=$1
 
-	echo "Path $path..."
+	echo -e "${GREEN}Path $path...${NC}"
 
-	modified=$(git ls-files -m)
+	local modified=$(git ls-files -m)
 
 	if [[ -n $modified ]]
 		then
 			echo "Some files is modified, stashing changes..."
-			git stash
+			git stash > /dev/null
 	fi
 
-	git pull --all
+	git checkout ${branches[develop]} > /dev/null
+	git pull > /dev/null
+	git checkout ${branches[master]} > /dev/null
+	git pull > /dev/null
 
 	if [[ -n $modified ]]
 		then
 			echo "Popping the stashed changes out..."
-			git stash pop
+			git stash pop > /dev/null
 	fi
 }
 
 helpFunction() {
-	echo "Git bash tool r4 by lehadnk"
+	echo "Git bash tool r5 by lehadnk"
 	echo ""
 	echo "Available arguments:"
 	echo "-c Makes a gitflow hotfix from a changes in this branch"
@@ -138,7 +154,8 @@ setGroup() {
 		exit
 	fi
 
-	echo "Opening project group $group..."
+	echo -e "${PURPLE}Opening project group $group...${NC
+}"
 
 	group=("${groups[${group}]}")
 	for g in $group; do
