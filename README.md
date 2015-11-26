@@ -24,7 +24,7 @@ You could also edit ~/.bashrc file to add an alias to the script:
 ```
 alias gitsh="~/gitsh.sh"
 ```
-This way you could call it from terminal in a much easier way.
+This way you can call it from terminal in a much easier way.
 
 # parameters
 **-c** Makes a gitflow hotfix from changes in a current branch<br />
@@ -40,7 +40,7 @@ groups=(
 	[mygroup]='project_name project_lib another_library'
 )
 ```
-This way you could easily handle things like making a hotfix including changes in both project and it's library in just a single command:<br>
-**gitsh -cpg mygroup** Will check projects "project_name", "project_lib" and "another_library" for changes, initiating a process of making a hotfix for ones you made changes in (aka *cd path/to/project/ && git stash && git tag && git flow hotfix start new_tag && git stash pop && git add . && git flow hotfix finish new_tag && git push && git push --tags && cd path/to/lib && git stash && git tag && git flow hotfix start new_tag && git stash pop && git add . && git flow hotOHMYGODPLEASESTOP*)
+This way you can easily handle things like making a hotfix including changes in both project and it's library with a single command:<br>
+**gitsh -cpg mygroup** Will check projects "project_name", "project_lib" and "another_library" for changes, initiating a process of making a hotfix for ones you made changes to (aka *cd path/to/project/ && git stash && git tag && git flow hotfix start new_tag && git stash pop && git add . && git flow hotfix finish new_tag && git push && git push --tags && cd path/to/lib && git stash && git tag && git flow hotfix start new_tag && git stash pop && git add . && git flow hotOHMYGODPLEASESTOP*)
 
-**gitsh -ug mygroup** is also useful macro which is launches a process of updating every project the group.
+**gitsh -ug mygroup** is also useful macro which launches a process of updating every project the group.
