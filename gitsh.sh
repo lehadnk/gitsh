@@ -71,7 +71,7 @@ commitFunction() {
 			echo "Popping out stashed changes..."
 			git stash pop > /dev/null
 	fi
-	git add .
+	git add --all .
 
 	echo "Making commit..."
 	git commit -m "$commit"
